@@ -77,7 +77,7 @@ GROUP BY t1.odvetvi
 ORDER BY pocet_poklesu DESC;
 
 /* otázka 2 Kolik je možné si koupit litrů mléka a kilogramů chleba za první a poslední srovnatelné období v dostupných datech cen a mezd? 
- * odpověď- Za průměrnou mzdu se v roce 2018 koupilo 1 669,6 litru mléka a 1 365,2 kg chleba oproti 1 465,7 litru a 1 313,0 kg v roce 2006*/
+ * odpověď- Za průměrnou mzdu se v roce 2018 koupilo 1 641,6 litru mléka a 1 342,2 kg chleba oproti 1 437,2 litru a 1 287,5 kg v roce 2006*/
 
 SELECT
     ceny.rok,
