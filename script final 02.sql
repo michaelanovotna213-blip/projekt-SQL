@@ -132,7 +132,7 @@ JOIN (SELECT rok, AVG(mzda_kc) AS prumerna_mzda, AVG(cena_kc) AS prumerna_cena
 ORDER BY rozdil DESC;
 
 /* otázka 5 Má výška HDP vliv na změny ve mzdách a cenách potravin? Neboli, pokud HDP vzroste výrazněji v jednom roce, projeví se to na cenách potravin či mzdách ve stejném nebo následujícím roce výraznějším růstem?
- * 
+ * odpověď - na mzdách se změna projeví cca s ročním zpožděním, na cenách potravin skoro vůbec.
  */
 SELECT
     t2.rok,
