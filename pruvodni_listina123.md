@@ -4,7 +4,7 @@
 
 
 
-K projektu jsem využila Claude ai aby mi objasnila jak se věci mají.
+K projektu jsem využila Claude ai aby mi objasnila jak se věci mají. Odpovědi na otázky jsou vždy pod samotnou otázkou.
 
 Mzdy jsou v databázi za roky 2000 až 2021. Ceny potravin jen 2006 až 2018 takže můžu porovnávat jenom tyto roky.
 
