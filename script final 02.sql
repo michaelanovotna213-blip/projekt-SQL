@@ -48,33 +48,48 @@ WHERE c.continent = 'Europe'
  * odpověď - ne nerostou všude, bez poklesu jen Zpracovatelský průmysl, Zdravotní a sociální péče a Ostatní činnosti.*/
 
 
+WITH mzdy AS (
+    SELECT DISTINCT rok, odvetvi, mzda_kc
+    FROM t_michaela_novotna_project_SQL_primary_final
+),
+zmeny AS (
+    SELECT
+        odvetvi,
+        rok,
+        mzda_kc,
+        LAG(mzda_kc) OVER (PARTITION BY odvetvi ORDER BY rok) AS mzda_predchozi_rok
+    FROM mzdy
+)
 SELECT
-    t1.odvetvi,
-    t2.rok,
-    t1.mzda_kc                                  AS mzda_predchozi_rok,
-    t2.mzda_kc                                  AS mzda_aktualni_rok,
-    ROUND(100 * (t2.mzda_kc / t1.mzda_kc - 1), 2) AS zmena_pct
-FROM (SELECT DISTINCT rok, odvetvi, mzda_kc
-      FROM t_michaela_novotna_project_SQL_primary_final ) AS t1
-JOIN ( SELECT DISTINCT rok, odvetvi, mzda_kc
-      FROM t_michaela_novotna_project_SQL_primary_final ) AS t2
-  ON t2.odvetvi = t1.odvetvi
- AND t2.rok = t1.rok + 1
-WHERE t2.mzda_kc < t1.mzda_kc
-ORDER BY t1.odvetvi, t2.rok;
+    odvetvi,
+    rok,
+    mzda_predchozi_rok,
+    mzda_kc AS mzda_aktualni_rok,
+    ROUND(100 * (mzda_kc / mzda_predchozi_rok - 1), 2) AS zmena_pct
+FROM zmeny
+WHERE mzda_kc < mzda_predchozi_rok
+ORDER BY odvetvi, rok;
 
+/* Počet poklesů v každém odvětví. */
+
+WITH mzdy AS (
+    SELECT DISTINCT rok, odvetvi, mzda_kc
+    FROM t_michaela_novotna_project_SQL_primary_final),
+zmeny AS (
+    SELECT
+        odvetvi,
+        rok,
+        mzda_kc,
+        LAG(mzda_kc) OVER (PARTITION BY odvetvi ORDER BY rok) AS mzda_predchozi_rok
+    FROM mzdy)
 SELECT
-    t1.odvetvi,
+    odvetvi,
     COUNT(*) AS pocet_poklesu
-FROM (SELECT DISTINCT rok, odvetvi, mzda_kc
-      FROM t_michaela_novotna_project_SQL_primary_final ) AS t1
-JOIN (SELECT DISTINCT rok, odvetvi, mzda_kc
-      FROM t_michaela_novotna_project_SQL_primary_final ) AS t2
-  ON t2.odvetvi = t1.odvetvi
- AND t2.rok = t1.rok + 1
-WHERE t2.mzda_kc < t1.mzda_kc
-GROUP BY t1.odvetvi
-ORDER BY pocet_poklesu DESC;
+FROM zmeny
+WHERE mzda_kc < mzda_predchozi_rok
+GROUP BY odvetvi
+ORDER BY pocet_poklesu DESC, odvetvi;
+
 
 /* otázka 2 Kolik je možné si koupit litrů mléka a kilogramů chleba za první a poslední srovnatelné období v dostupných datech cen a mezd? 
  * odpověď- Za průměrnou mzdu se v roce 2018 koupilo 1 641,6 litru mléka a 1 342,2 kg chleba oproti 1 437,2 litru a 1 287,5 kg v roce 2006*/
@@ -103,56 +118,116 @@ ORDER BY ceny.potravina, ceny.rok;
 /*otázka 3 Která kategorie potravin zdražuje nejpomaleji (je u ní nejnižší percentuální meziroční nárůst
  * odpovědˇ- nejnižší procentuální nárůst je u krystalového cukru */
 
+WITH ceny AS (
+    SELECT DISTINCT rok, potravina, cena_kc
+    FROM t_michaela_novotna_project_SQL_primary_final),
+zmeny AS (
+    SELECT
+        potravina,
+        rok,
+        cena_kc,
+        LAG(cena_kc) OVER (PARTITION BY potravina ORDER BY rok) AS cena_predchozi_rok
+    FROM ceny)
 SELECT
-    t1.potravina,
-    ROUND(AVG(100 * (t2.cena_kc / t1.cena_kc - 1)), 2) AS prumerny_mezirocni_rust
-FROM (SELECT DISTINCT rok, potravina, cena_kc
-      FROM t_michaela_novotna_project_SQL_primary_final ) AS t1
-JOIN (SELECT DISTINCT rok, potravina, cena_kc
-      FROM t_michaela_novotna_project_SQL_primary_final) AS t2
-    ON t2.potravina = t1.potravina
-   AND t2.rok = t1.rok + 1
-GROUP BY t1.potravina
+    potravina,
+    ROUND(AVG(100 * (cena_kc / cena_predchozi_rok - 1)), 2) AS prumerny_mezirocni_rust
+FROM zmeny
+WHERE cena_predchozi_rok IS NOT NULL
+GROUP BY potravina
 ORDER BY prumerny_mezirocni_rust;
+
 
 /* otázka 4 Existuje rok, ve kterém byl meziroční nárůst cen potravin výrazně vyšší než růst mezd (větší než 10 %)?
  * odpověď- ne neexistuje, všechny nárůsty jsou menší než 10%*/
 
+WITH mzdy AS (
+    SELECT DISTINCT rok, odvetvi, mzda_kc
+    FROM t_michaela_novotna_project_SQL_primary_final),
+mzda_rok AS (
+    SELECT rok, AVG(mzda_kc) AS mzda_kc
+    FROM mzdy
+    GROUP BY rok),
+rust_mezd AS (
+    SELECT
+        rok,
+        ROUND(100 * (mzda_kc / LAG(mzda_kc) OVER (ORDER BY rok) - 1), 2) AS rust
+    FROM mzda_rok),
+ceny AS (
+    SELECT DISTINCT rok, potravina, cena_kc
+    FROM t_michaela_novotna_project_SQL_primary_final),
+zmeny_cen AS (
+    SELECT
+        potravina,
+        rok,
+        cena_kc,
+        LAG(cena_kc) OVER (PARTITION BY potravina ORDER BY rok) AS cena_predchozi_rok
+    FROM ceny),
+rust_cen AS (
+    SELECT
+        rok,
+        ROUND(AVG(100 * (cena_kc / cena_predchozi_rok - 1)), 2) AS rust
+    FROM zmeny_cen
+    WHERE cena_predchozi_rok IS NOT NULL
+    GROUP BY rok)
 SELECT
-    t2.rok,
-    ROUND(100 * (t2.prumerna_mzda / t1.prumerna_mzda - 1), 2) AS rust_mezd,
-    ROUND(100 * (t2.prumerna_cena / t1.prumerna_cena - 1), 2) AS rust_cen,
-    ROUND(100 * (t2.prumerna_cena / t1.prumerna_cena - 1)
-        - 100 * (t2.prumerna_mzda / t1.prumerna_mzda - 1), 2) AS rozdil
-FROM (SELECT rok, AVG(mzda_kc) AS prumerna_mzda, AVG(cena_kc) AS prumerna_cena
-      FROM t_michaela_novotna_project_SQL_primary_final GROUP BY rok) AS t1
-JOIN (SELECT rok, AVG(mzda_kc) AS prumerna_mzda, AVG(cena_kc) AS prumerna_cena
-      FROM t_michaela_novotna_project_SQL_primary_final GROUP BY rok) AS t2
-    ON t2.rok = t1.rok + 1
-ORDER BY rozdil DESC;
+    rust_mezd.rok,
+    rust_mezd.rust                           AS rust_mezd,
+    rust_cen.rust                            AS rust_cen,
+    ROUND(rust_cen.rust - rust_mezd.rust, 2) AS rozdil_pb
+FROM rust_mezd
+JOIN rust_cen ON rust_cen.rok = rust_mezd.rok
+WHERE rust_mezd.rust IS NOT NULL
+ORDER BY rozdil_pb DESC;
+
 
 /* otázka 5 Má výška HDP vliv na změny ve mzdách a cenách potravin? Neboli, pokud HDP vzroste výrazněji v jednom roce, projeví se to na cenách potravin či mzdách ve stejném nebo následujícím roce výraznějším růstem?
  * odpověď - na mzdách se změna projeví cca s ročním zpožděním, na cenách potravin skoro vůbec.
  */
+WITH mzdy AS (
+    SELECT DISTINCT rok, odvetvi, mzda_kc
+    FROM t_michaela_novotna_project_SQL_primary_final),
+mzda_rok AS (
+    SELECT rok, AVG(mzda_kc) AS mzda_kc
+    FROM mzdy
+    GROUP BY rok),
+rust_mezd AS (
+    SELECT
+        rok,
+        ROUND(100 * (mzda_kc / LAG(mzda_kc) OVER (ORDER BY rok) - 1), 2) AS rust
+    FROM mzda_rok),
+ceny AS (
+    SELECT DISTINCT rok, potravina, cena_kc
+    FROM t_michaela_novotna_project_SQL_primary_final),
+zmeny_cen AS (
+    SELECT
+        potravina,
+        rok,
+        cena_kc,
+        LAG(cena_kc) OVER (PARTITION BY potravina ORDER BY rok) AS cena_predchozi_rok
+    FROM ceny),
+rust_cen AS (
+    SELECT
+        rok,
+        ROUND(AVG(100 * (cena_kc / cena_predchozi_rok - 1)), 2) AS rust
+    FROM zmeny_cen
+    WHERE cena_predchozi_rok IS NOT NULL
+    GROUP BY rok),
+rust_hdp AS (
+    SELECT
+        rok,
+        ROUND(CAST(100 * (hdp / LAG(hdp) OVER (ORDER BY rok) - 1) AS numeric), 2) AS rust
+    FROM t_michaela_novotna_project_SQL_secondary_final
+    WHERE stat = 'Czech Republic')
 SELECT
-    t2.rok,
-    ROUND(CAST(100 * (hdp2.hdp / hdp1.hdp - 1) AS numeric), 2) AS rust_hdp,
-    ROUND(100 * (t2.prumerna_mzda / t1.prumerna_mzda - 1), 2) AS mzdy_stejny_rok,
-    ROUND(100 * (t2.prumerna_cena / t1.prumerna_cena - 1), 2) AS ceny_stejny_rok,
-    ROUND(100 * (t3.prumerna_mzda / t2.prumerna_mzda - 1), 2) AS mzdy_dalsi_rok,
-    ROUND(100 * (t3.prumerna_cena / t2.prumerna_cena - 1), 2) AS ceny_dalsi_rok
-FROM (SELECT rok, AVG(mzda_kc) AS prumerna_mzda, AVG(cena_kc) AS prumerna_cena
-      FROM t_michaela_novotna_project_SQL_primary_final GROUP BY rok) AS t1
-JOIN (SELECT rok, AVG(mzda_kc) AS prumerna_mzda, AVG(cena_kc) AS prumerna_cena
-      FROM t_michaela_novotna_project_SQL_primary_final GROUP BY rok) AS t2
-    ON t2.rok = t1.rok + 1
-LEFT JOIN (SELECT rok, AVG(mzda_kc) AS prumerna_mzda, AVG(cena_kc) AS prumerna_cena
-           FROM t_michaela_novotna_project_SQL_primary_final GROUP BY rok) AS t3
-    ON t3.rok = t2.rok + 1
-JOIN "t_michaela_novotna_project_SQL_secondary_final" AS hdp1
-    ON hdp1.rok = t1.rok AND hdp1.stat = 'Czech Republic'
-JOIN "t_michaela_novotna_project_SQL_secondary_final" AS hdp2
-    ON hdp2.rok = t2.rok AND hdp2.stat = 'Czech Republic'
-ORDER BY t2.rok;
-
+    rust_hdp.rok,
+    rust_hdp.rust                                        AS rust_hdp,
+    rust_mezd.rust                                       AS mzdy_stejny_rok,
+    rust_cen.rust                                        AS ceny_stejny_rok,
+    LEAD(rust_mezd.rust) OVER (ORDER BY rust_hdp.rok)    AS mzdy_dalsi_rok,
+    LEAD(rust_cen.rust)  OVER (ORDER BY rust_hdp.rok)    AS ceny_dalsi_rok
+FROM rust_hdp
+LEFT JOIN rust_mezd ON rust_mezd.rok = rust_hdp.rok
+LEFT JOIN rust_cen  ON rust_cen.rok  = rust_hdp.rok
+WHERE rust_hdp.rust IS NOT NULL
+ORDER BY rust_hdp.rok;
 
