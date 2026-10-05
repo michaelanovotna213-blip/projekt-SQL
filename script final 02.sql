@@ -17,6 +17,7 @@ FROM
      JOIN czechia_payroll_industry_branch ib ON ib.code = cp.industry_branch_code
      WHERE cp.value IS NOT NULL
        AND cp.value_type_code = 5958
+    AND cp.calculation_code = 200
      GROUP BY cp.payroll_year, ib.name) AS mzdy
 JOIN
     (SELECT
