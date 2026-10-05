@@ -2,24 +2,17 @@
 
 **Projekt SQL**- Michaela Novotná
 
-
-
-K projektu jsem využila Claude ai aby mi objasnila jak se věci mají. Odpovědi na otázky jsou vždy pod samotnou otázkou.
-
-Mzdy jsou v databázi za roky 2000 až 2021. Ceny potravin jen 2006 až 2018 takže můžu porovnávat jenom tyto roky.
-
-Do skriptu jsem ta čísla nepsala ručně. Spojení se dělá přes rok, takže chybějící roky samy vypadnou.
-
+Úvod
+Zadáním bylo zjistit, jak jsou pro běžného člověka dostupné základní potraviny
+a jestli se to v čase zlepšuje nebo zhoršuje. V databázi jsou k tomu dvě sady čísel. Mzdy — kolik lidé v průměru
+vydělávají, rozdělené podle odvětví, ve kterém pracují. A ceny potravin — kolik stojí chleba, mléko, máslo atd.
+K projektu jsem využila Claude ai aby mi objasnila jak se věci mají. Mzdy jsou v databázi za roky 2000 až 2021. Ceny potravin jen 2006 až 2018 takže můžu porovnávat jenom tyto roky. Do skriptu jsem ta čísla nepsala ručně. Spojení se dělá přes rok, takže chybějící roky samy vypadnou.
 
 ON ceny.rok = mzdy.rok
-
-
-
 
 Mzdy jsou po čtvrtletích. Udělala jsem z nich roční průměr, zvlášť pro každé odvětví. V tabulce je jen kód odvětví, přes `JOIN` jsem přitáhla název. Ve sloupci `value` nejsou jen mzdy, ale i počty zaměstnanců. Proto filtr 
 
 `value\_type\_code = 5958`. Mzdy jsou navíc ve dvou variantách, jednu vybírá `calculation\_code = 200`.
-
 
 (SELECT
      cp.payroll\_year AS rok,
@@ -98,5 +91,49 @@ LEFT JOIN mzdy AS m  ON m.rok  = h.rok
 LEFT JOIN ceny AS c  ON c.rok  = h.rok
 LEFT JOIN mzdy AS m2 ON m2.rok = h.rok + 1
 LEFT JOIN ceny AS c2 ON c2.rok = h.rok + 1
+
+ Výzkumné otázky a odpovědi
+
+ 1. Rostou v průběhu let mzdy ve všech odvětvích, nebo v některých klesají?
+
+Ne, nerostou všude. Ze 19 odvětví jich 16 zaznamenalo alespoň jeden
+meziroční pokles mzdy. Nejvíc poklesů má třeba těžba a dobývání (4 roky), dále výroba a rozvod
+elektřiny, plynu a tepla (3 roky).
+
+Celé období bez jediného poklesu prošla jen tři odvětví: zpracovatelský
+průmysl, zdravotní a sociální péče a ostatní činnosti.
+
+---
+
+2. Kolik je možné si koupit litrů mléka a kilogramů chleba za první a poslední srovnatelné období?
+
+Za průměrnou mzdu se v roce 2018 koupilo 1 641,6 litru mléka a 1 342,2 kg chleba oproti 1 437,2 litru a 1 287,5 kg v roce 2006
+
+---
+
+ 3. Která kategorie potravin zdražuje nejpomaleji?
+
+Nejnižší procentuální nárůst je u krystalového cukru  Ve skutečnosti nezdražuje vůbec — za sledované období
+průměrně zlevňoval o 1,92 % ročně.
+
+---
+
+4. Existuje rok, ve kterém byl meziroční nárůst cen potravin výrazně vyšší než růst mezd (větší než 10 %)?
+
+ne neexistuje, všechny nárůsty jsou menší než 10%
+
+---
+
+5. Má výška HDP vliv na změny ve mzdách a cenách potravin?
+
+Na mzdách se změna projeví cca s ročním zpožděním, na cenách potravin skoro vůbec.
+
+---
+
+Závěr
+
+Dostupnost základních potravin se mezi lety 2006 a 2018 zlepšila. Mzdy rostly rychleji než ceny potravin, takže si za průměrnou výplatu lze koupit víc jídla než na začátku období. U mléka je to o 14 % víc, u chleba o 4 %. Zlepšení ale nebylo plynulé. V 16 z 19 odvětví mzda aspoň jednou meziročně klesla a rok 2013 byl pro zaměstnance nejhorší. Jednotlivé potraviny zdražovali a zlevňovaly různě . Cukr a rajčata za sledované
+období zlevňovaly, papriky a máslo zdražovaly o víc než 6 % ročně. Růst HDP se promítá do mezd, ale až s ročním odstupem. Na ceny potravin vliv nemá.
+
 
 
