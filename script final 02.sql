@@ -44,8 +44,7 @@ JOIN economies e ON e.country = c.country
 WHERE c.continent = 'Europe'
   AND e.year BETWEEN 2006 AND 2018;
 
-/* otázka 1. Rostou v průběhu let mzdy ve všech odvětvích, nebo v některých klesají?
- * odpověď - ne nerostou všude, bez poklesu jen Zpracovatelský průmysl, Zdravotní a sociální péče a Ostatní činnosti.*/
+/* otázka 1. Rostou v průběhu let mzdy ve všech odvětvích, nebo v některých klesají?*/
 
 
 WITH mzdy AS (
@@ -91,8 +90,7 @@ GROUP BY odvetvi
 ORDER BY pocet_poklesu DESC, odvetvi;
 
 
-/* otázka 2 Kolik je možné si koupit litrů mléka a kilogramů chleba za první a poslední srovnatelné období v dostupných datech cen a mezd? 
- * odpověď- Za průměrnou mzdu se v roce 2018 koupilo 1 641,6 litru mléka a 1 342,2 kg chleba oproti 1 437,2 litru a 1 287,5 kg v roce 2006*/
+/* otázka 2 Kolik je možné si koupit litrů mléka a kilogramů chleba za první a poslední srovnatelné období v dostupných datech cen a mezd? */
 
 SELECT
     ceny.rok,
@@ -115,8 +113,7 @@ JOIN
 WHERE ceny.rok IN (2006, 2018)
 ORDER BY ceny.potravina, ceny.rok;
 
-/*otázka 3 Která kategorie potravin zdražuje nejpomaleji (je u ní nejnižší percentuální meziroční nárůst
- * odpovědˇ- nejnižší procentuální nárůst je u krystalového cukru */
+/*otázka 3 Která kategorie potravin zdražuje nejpomaleji (je u ní nejnižší percentuální meziroční nárůst*/
 
 WITH ceny AS (
     SELECT DISTINCT rok, potravina, cena_kc
@@ -137,8 +134,7 @@ GROUP BY potravina
 ORDER BY prumerny_mezirocni_rust;
 
 
-/* otázka 4 Existuje rok, ve kterém byl meziroční nárůst cen potravin výrazně vyšší než růst mezd (větší než 10 %)?
- * odpověď- ne neexistuje, všechny nárůsty jsou menší než 10%*/
+/* otázka 4 Existuje rok, ve kterém byl meziroční nárůst cen potravin výrazně vyšší než růst mezd (větší než 10 %)?*/
 
 WITH mzdy AS (
     SELECT DISTINCT rok, odvetvi, mzda_kc
@@ -180,8 +176,7 @@ WHERE rust_mezd.rust IS NOT NULL
 ORDER BY rozdil_pb DESC;
 
 
-/* otázka 5 Má výška HDP vliv na změny ve mzdách a cenách potravin? Neboli, pokud HDP vzroste výrazněji v jednom roce, projeví se to na cenách potravin či mzdách ve stejném nebo následujícím roce výraznějším růstem?
- * odpověď - na mzdách se změna projeví cca s ročním zpožděním, na cenách potravin skoro vůbec.
+/* otázka 5 Má výška HDP vliv na změny ve mzdách a cenách potravin? Neboli, pokud HDP vzroste výrazněji v jednom roce, projeví se to na cenách potravin či mzdách ve stejném nebo následujícím roce výraznějším růstem
  */
 WITH mzdy AS (
     SELECT DISTINCT rok, odvetvi, mzda_kc
