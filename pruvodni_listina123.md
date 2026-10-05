@@ -16,7 +16,9 @@ ON ceny.rok = mzdy.rok
 
 
 
-Mzdy jsou po čtvrtletích. Udělala jsem z nich roční průměr, zvlášť pro každé odvětví. V tabulce je jen kód odvětví, přes `JOIN` jsem přitáhla název. Ve sloupci `value` nejsou jen mzdy, ale i počty zaměstnanců. Proto filtr `value\_type\_code = 5958`. Mzdy jsou navíc ve dvou variantách, jednu vybírá `calculation\_code = 200`.
+Mzdy jsou po čtvrtletích. Udělala jsem z nich roční průměr, zvlášť pro každé odvětví. V tabulce je jen kód odvětví, přes `JOIN` jsem přitáhla název. Ve sloupci `value` nejsou jen mzdy, ale i počty zaměstnanců. Proto filtr 
+
+`value\_type\_code = 5958`. Mzdy jsou navíc ve dvou variantách, jednu vybírá `calculation\_code = 200`.
 
 
 (SELECT
