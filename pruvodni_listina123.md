@@ -19,14 +19,14 @@ Mzdy jsou po čtvrtletích. Udělala jsem z nich roční průměr, zvlášť pro
 ---
 
 (SELECT
-     cp.payroll\_year AS rok,
-     ib.name AS odvetvi,
-     CAST(AVG(cp.value) AS numeric(10,2)) AS mzda\_kc
- FROM czechia\_payroll cp
- JOIN czechia\_payroll\_industry\_branch ib ON ib.code = cp.industry\_branch\_code
+cp.payroll\_year AS rok,
+ib.name AS odvetvi,
+CAST(AVG(cp.value) AS numeric(10,2)) AS mzda\_kc
+FROM czechia\_payroll cp
+JOIN czechia\_payroll\_industry\_branch ib ON ib.code = cp.industry\_branch\_code
  WHERE cp.value IS NOT NULL
-   AND cp.value\_type\_code = 5958
-   AND cp.calculation\_code = 200
+ AND cp.value\_type\_code = 5958
+ AND cp.calculation\_code = 200
  GROUP BY cp.payroll\_year, ib.name) AS mzdy
 
 --- 
