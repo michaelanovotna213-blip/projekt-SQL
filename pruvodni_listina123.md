@@ -45,14 +45,22 @@ Ceny jsou po týdnech a mají jen datum, ne rok. Rok jsem vytáhla pomocí `date
 
 
 (SELECT
-     date\_part('year', p.date\_from) AS rok,
-     pc.name AS potravina,
+date\_part('year', p.date\_from) AS rok,
+
+pc.name AS potravina,
+     
      pc.price\_value AS mnozstvi,
+    
      pc.price\_unit AS jednotka,
+     
      CAST(AVG(p.value) AS numeric(10,2)) AS cena\_kc
- FROM czechia\_price p
+
+FROM czechia\_price p
+ 
  JOIN czechia\_price\_category pc ON pc.code = p.category\_code
+ 
  WHERE p.value IS NOT NULL
+
  GROUP BY date\_part('year', p.date\_from), pc.name, pc.price_value, pc.price\_unit) AS ceny
 
 ---
