@@ -41,7 +41,7 @@ Ceny jsou po týdnech a mají jen datum, ne rok. Rok jsem vytáhla pomocí `date
  FROM czechia\_price p
  JOIN czechia\_price\_category pc ON pc.code = p.category\_code
  WHERE p.value IS NOT NULL
- GROUP BY date\_part('year', p.date\_from), pc.name, pc.price\_value, pc.price\_unit) AS ceny
+ GROUP BY date\_part('year', p.date\_from), pc.name, pc.price_value, pc.price\_unit) AS ceny
 
 
 
@@ -49,19 +49,18 @@ Obojí jsem spojila podle roku. Výsledek má 6 498 řádků — 13 let × 19 od
 
 
 
-Pro meziroční mzdu tabulku spojím samu se sebou. `t1` je starší rok, `t2` následující.
+Pro meziroční změnu používám window funkci LAG(). Ta ke každému řádku přitáhne hodnotu z předchozího roku. PARTITION BY zajistí, že se roky porovnávají jen v rámci jednoho odvětví, ORDER BY určuje, co je „předchozí".
 
-
-
-FROM (SELECT DISTINCT rok, odvetvi, mzda\_kc
-      FROM t\_michaela\_novotna\_project\_SQL\_primary\_final) AS t1
-JOIN (SELECT DISTINCT rok, odvetvi, mzda\_kc
-      FROM t\_michaela\_novotna\_project\_SQL\_primary\_final) AS t2
-  ON t2.odvetvi = t1.odvetvi
- AND t2.rok = t1.rok + 1
-
+LAG(mzda_kc) OVER (PARTITION BY odvetvi ORDER BY rok) AS mzda_predchozi_rok
 
 Změnu pak spočítám jako podíl obou hodnot.
+
+ROUND(100 * (mzda_kc / mzda_predchozi_rok - 1), 2) AS zmena_pct
+
+U zdražování počítám procento zvlášť u každé potraviny a teprve ta procenta průměruji. Průměrovat ceny v korunách by nedávalo smysl, protože kilo másla a půllitr piva nejdou sčítat.
+
+ROUND(AVG(100 * (cena_kc / cena_predchozi_rok - 1)), 2) AS prumerny_mezirocni_rust
+
 
 
 
@@ -83,19 +82,18 @@ Ve výsledné tabulce se mzda opakuje proto před počítáním vybírám jen sa
 
 
 
-U poslední otázky potřebuju stejné mezivýpočty čtyřikrát: růst mezd a růst cen,
-pokaždé pro stejný rok i pro rok následující. Proto jsem je pojmenovala
-blokem `WITH`. Bez něj by se ty samé poddotazy v dotazu opakovaly čtyřikrát.
+U poslední otázky potřebuju stejné mezivýpočty čtyřikrát: růst mezd a růst cen, pokaždé pro stejný rok i pro rok následující. Proto jsem je pojmenovala blokem WITH. Bez něj by se ty samé poddotazy v dotazu opakovaly čtyřikrát.
 
-Pro rok 2018 navíc neexistuje následující rok. Obyčejný `JOIN` by ho vyhodil,
-proto `LEFT JOIN`. Rok zůstane a chybějící hodnota je prázdná.
+Hodnoty za následující rok přitáhne LEAD(), což je LAG() obráceně.
 
+Pro rok 2018 navíc neexistuje následující rok. Obyčejný JOIN by ho vyhodil, proto LEFT JOIN. Rok zůstane a chybějící hodnota je prázdná.
 
 FROM hdp AS h
-LEFT JOIN mzdy AS m  ON m.rok  = h.rok
-LEFT JOIN ceny AS c  ON c.rok  = h.rok
-LEFT JOIN mzdy AS m2 ON m2.rok = h.rok + 1
-LEFT JOIN ceny AS c2 ON c2.rok = h.rok + 1
+
+LEFT JOIN mzdy AS m ON m.rok = h.rok
+
+LEFT JOIN ceny AS c ON c.rok = h.rok
+
 
  Výzkumné otázky a odpovědi
 
