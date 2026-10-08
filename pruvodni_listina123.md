@@ -6,7 +6,7 @@
 Zadáním bylo zjistit, jak jsou pro běžného člověka dostupné základní potraviny a jestli se to v čase zlepšuje nebo zhoršuje. V databázi jsou k tomu dvě sady čísel. Mzdy — kolik lidé v průměru
 vydělávají, rozdělené podle odvětví, ve kterém pracují. A ceny potravin — kolik stojí chleba, mléko, máslo atd.
 K projektu jsem využila Claude ai aby mi objasnila jak se věci mají. Mzdy jsou v databázi za roky 2000 až 2021. Ceny potravin jen 2006 až 2018 takže můžu porovnávat jenom tyto roky. Do skriptu jsem ta čísla nepsala ručně. Spojení se dělá přes rok, takže chybějící roky samy vypadnou.
-
+---
 ON ceny.rok = mzdy.rok
 
 Mzdy jsou po čtvrtletích. Udělala jsem z nich roční průměr, zvlášť pro každé odvětví. V tabulce je jen kód odvětví, přes `JOIN` jsem přitáhla název. Ve sloupci `value` nejsou jen mzdy, ale i počty zaměstnanců. Proto filtr 
@@ -14,7 +14,7 @@ Mzdy jsou po čtvrtletích. Udělala jsem z nich roční průměr, zvlášť pro
 
 
 `value\_type\_code = 5958`. Mzdy jsou navíc ve dvou variantách, jednu vybírá `calculation\_code = 200`.
-
+---
 (SELECT
      cp.payroll\_year AS rok,
      ib.name AS odvetvi,
@@ -26,7 +26,7 @@ Mzdy jsou po čtvrtletích. Udělala jsem z nich roční průměr, zvlášť pro
    AND cp.calculation\_code = 200
  GROUP BY cp.payroll\_year, ib.name) AS mzdy
 
- 
+--- 
 
 
 Ceny jsou po týdnech a mají jen datum, ne rok. Rok jsem vytáhla pomocí `date\_part`. Pak zase roční průměr, tentokrát za každou potravinu.
