@@ -46,11 +46,11 @@ Ceny jsou po týdnech a mají jen datum, ne rok. Rok jsem vytáhla pomocí `date
  WHERE p.value IS NOT NULL
  GROUP BY date\_part('year', p.date\_from), pc.name, pc.price_value, pc.price\_unit) AS ceny
 
-
+---
 
 Obojí jsem spojila podle roku. Výsledek má 6 498 řádků — 13 let × 19 odvětví × 27 potravin. Na pořadí záleží, každý pod dotaz nejdřív spočítá svůj průměr.
 
-
+---
 
 Pro meziroční změnu používám window funkci LAG(). Ta ke každému řádku přitáhne hodnotu z předchozího roku. PARTITION BY zajistí, že se roky porovnávají jen v rámci jednoho odvětví, ORDER BY určuje, co je „předchozí".
 
@@ -64,7 +64,7 @@ U zdražování počítám procento zvlášť u každé potraviny a teprve ta pr
 
 ROUND(AVG(100 * (cena_kc / cena_predchozi_rok - 1)), 2) AS prumerny_mezirocni_rust
 
-
+---
 
 
 ROUND(100 \* (t2.mzda\_kc / t1.mzda\_kc - 1), 2) AS zmena\_pct
@@ -83,7 +83,7 @@ Ve výsledné tabulce se mzda opakuje proto před počítáním vybírám jen sa
  FROM t\_michaela\_novotna\_project\_SQL\_primary\_final)
 
 
-
+---
 
 U poslední otázky potřebuju stejné mezivýpočty čtyřikrát: růst mezd a růst cen, pokaždé pro stejný rok i pro rok následující. Proto jsem je pojmenovala blokem WITH. Bez něj by se ty samé poddotazy v dotazu opakovaly čtyřikrát.
 
@@ -97,7 +97,7 @@ LEFT JOIN mzdy AS m ON m.rok = h.rok
 
 LEFT JOIN ceny AS c ON c.rok = h.rok
 
-
+---
  Výzkumné otázky a odpovědi
 
  1. Rostou v průběhu let mzdy ve všech odvětvích, nebo v některých klesají?
